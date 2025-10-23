@@ -13,19 +13,19 @@ env:
 jobs:
   fmt:
     name: Format Check
-    uses: ./.github/workflows/reusable-fmt.yml
+    uses: ./.github/workflows/fmt.yml
 
   clippy:
     name: Clippy
-    uses: ./.github/workflows/reusable-clippy.yml
+    uses: ./.github/workflows/clippy.yml
 
   test:
     name: Test
-    uses: ./.github/workflows/reusable-test.yml
+    uses: ./.github/workflows/test.yml
 
   build:
     name: Build
-    uses: ./.github/workflows/reusable-build.yml
+    uses: ./.github/workflows/build.yml
 
   deploy:
     name: Deploy to Fly.io
