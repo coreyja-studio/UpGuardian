@@ -7,7 +7,7 @@ use axum::{
     Form,
 };
 
-use chrono::Duration;
+use chrono::{DateTime, Duration, Utc};
 use cja::{
     app_state::AppState as _,
     server::session::{DBSession, SessionRedirect},
@@ -25,6 +25,8 @@ struct SiteTableRow {
     name: String,
     domain: String,
     description: Option<String>,
+    last_checkin_outcome: Option<String>,
+    last_checkin_created_at: Option<DateTime<Utc>>,
 }
 
 impl Render for SiteTableRow {
@@ -38,9 +40,24 @@ impl Render for SiteTableRow {
                         (self.name)
                     }
                 }
-                // TODO: Check the last checkin for the 'status'
-                p."rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset text-green-700 bg-green-50 ring-green-600/20" {
-                    "Complete"
+                @if let Some(outcome) = self.last_checkin_outcome.as_ref() {
+                    @if outcome == "success" {
+                        p."rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset text-green-700 bg-green-50 ring-green-600/20" {
+                            "Success"
+                        }
+                    } @else if outcome == "failure" {
+                        p."rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset text-red-700 bg-red-50 ring-red-600/20" {
+                            "Failure"
+                        }
+                    } @else {
+                        p."rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset text-yellow-700 bg-yellow-50 ring-yellow-600/20" {
+                            "Error"
+                        }
+                    }
+                } @else {
+                    p."rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset text-gray-700 bg-gray-50 ring-gray-600/20" {
+                        "No Checks"
+                    }
                 }
             }
             @if let Some(description) = self.description.as_ref() {
@@ -51,15 +68,23 @@ impl Render for SiteTableRow {
               }
             }
             div."mt-1 flex items-center gap-x-2 text-xs leading-5 text-gray-500" {
-                p."whitespace-nowrap" {
-                    "Last Checked at "
-                    // TODO: Grab the last checked at
-                    time datetime="2023-03-17T00:00Z" {
-                        "March 17, 2023"
+                @if let Some(last_checked) = self.last_checkin_created_at {
+                    p."whitespace-nowrap" {
+                        "Last Checked at "
+                        time datetime=(last_checked.to_rfc3339()) {
+                            (last_checked.format("%B %d, %Y at %H:%M UTC"))
+                        }
                     }
-                }
-                svg."h-0.5 w-0.5 fill-current" viewBox="0 0 2 2" {
-                    circle cy="1" cx="1" r="1" {}
+                    svg."h-0.5 w-0.5 fill-current" viewBox="0 0 2 2" {
+                        circle cy="1" cx="1" r="1" {}
+                    }
+                } @else {
+                    p."whitespace-nowrap" {
+                        "Never Checked"
+                    }
+                    svg."h-0.5 w-0.5 fill-current" viewBox="0 0 2 2" {
+                        circle cy="1" cx="1" r="1" {}
+                    }
                 }
                 p."truncate" {
                     (self.domain)
@@ -112,9 +137,24 @@ pub async fn index(session: DBSession, State(state): State<AppState>) -> impl In
     let sites = sqlx::query_as!(
         SiteTableRow,
         r#"
-    SELECT site_id, name, domain, description
+    SELECT
+        Sites.site_id,
+        Sites.name,
+        Sites.domain,
+        Sites.description,
+        latest_checkins.outcome as last_checkin_outcome,
+        latest_checkins.created_at as last_checkin_created_at
     FROM Sites
-    WHERE user_id = $1
+    LEFT JOIN LATERAL (
+        SELECT Checkins.outcome, Checkins.created_at
+        FROM Checkins
+        JOIN Pages ON Checkins.page_id = Pages.page_id
+        WHERE Pages.site_id = Sites.site_id
+        ORDER BY Checkins.created_at DESC
+        LIMIT 1
+    ) latest_checkins ON true
+    WHERE Sites.user_id = $1
+    ORDER BY Sites.name
   "#,
         session.user_id
     )
