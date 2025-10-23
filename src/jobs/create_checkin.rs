@@ -1,4 +1,3 @@
-
 use cja::{app_state::AppState as _, jobs::Job};
 use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
