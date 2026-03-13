@@ -1,14 +1,17 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr, time::Duration};
 
-use cja::{app_state::AppState as _, jobs::worker::job_worker, tower_cookies::CookieManagerLayer};
+use cja::{app_state::AppState as _, jobs::worker::job_worker};
 use miette::{Context, IntoDiagnostic, Result};
 use setup::setup_sentry;
 use tokio::{net::TcpListener, task::JoinError};
+use tokio_util::sync::CancellationToken;
+use tower_cookies::CookieManagerLayer;
 use tracing::info;
 
 use crate::{jobs::Jobs, routes::routes};
 
 mod app_state;
+pub(crate) mod session;
 mod setup;
 
 mod cron;
@@ -62,16 +65,34 @@ async fn _main() -> Result<()> {
 
     let app_state = AppState::from_env().await?;
 
-    cja::sqlx::migrate!()
-        .run(app_state.db())
-        .await
-        .into_diagnostic()?;
+    let shutdown_token = CancellationToken::new();
 
     info!("Spawning Tasks");
     let futures = vec![
         tokio::spawn(run_axum(app_state.clone())),
-        tokio::spawn(job_worker(app_state.clone(), Jobs)),
-        tokio::spawn(cron::run_cron(app_state.clone())),
+        tokio::spawn({
+            let app_state = app_state.clone();
+            let token = shutdown_token.clone();
+            async move {
+                job_worker(
+                    app_state,
+                    Jobs,
+                    Duration::from_secs(5),
+                    20,
+                    token,
+                    Duration::from_secs(7200),
+                )
+                .await
+                .map_err(|e| miette::miette!("{e:#}"))
+            }
+        }),
+        tokio::spawn({
+            let app_state = app_state.clone();
+            let token = shutdown_token.clone();
+            async move {
+                cron::run_cron(app_state, token).await
+            }
+        }),
     ];
     info!("Tasks Spawned");
 

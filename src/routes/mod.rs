@@ -43,7 +43,7 @@ async fn static_assets(Path(p): Path<String>) -> Response {
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(home::show))
-        .route("/public/*path", get(static_assets))
+        .route("/public/{*path}", get(static_assets))
         .route("/styles/tailwind.css", get(tailwind_css))
         .route("/login", get(login::show))
         .route("/login/callback", get(login::callback))
@@ -53,22 +53,22 @@ pub fn routes() -> Router<AppState> {
             get(current_user::sites::index).post(current_user::sites::create),
         )
         .route("/my/sites/new", get(current_user::sites::new))
-        .route("/my/sites/:site_id", get(current_user::sites::show))
-        .route("/my/sites/:site_id/refresh", get(current_user::sites::refresh))
+        .route("/my/sites/{site_id}", get(current_user::sites::show))
+        .route("/my/sites/{site_id}/refresh", get(current_user::sites::refresh))
         .route(
-            "/my/sites/:site_id/pages/new",
+            "/my/sites/{site_id}/pages/new",
             get(current_user::pages::new),
         )
         .route(
-            "/my/sites/:site_id/pages",
+            "/my/sites/{site_id}/pages",
             post(current_user::pages::create),
         )
         .route(
-            "/my/sites/:site_id/pages/:page_id",
+            "/my/sites/{site_id}/pages/{page_id}",
             get(current_user::pages::show),
         )
         .route(
-            "/my/sites/:site_id/pages/:page_id/refresh",
+            "/my/sites/{site_id}/pages/{page_id}/refresh",
             get(current_user::pages::refresh),
         )
 }

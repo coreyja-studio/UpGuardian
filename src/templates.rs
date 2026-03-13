@@ -1,5 +1,7 @@
 use axum::{http::HeaderMap, response::IntoResponse};
-use cja::{app_state::AppState as _, server::session::DBSession};
+use cja::app_state::AppState as _;
+
+use crate::session::DBSession;
 use maud::{html, Markup, Render};
 use miette::IntoDiagnostic;
 
