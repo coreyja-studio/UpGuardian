@@ -1,6 +1,5 @@
 
 use cja::{app_state::AppState as _, jobs::Job};
-use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 
 use tokio::time::Instant;
@@ -17,7 +16,7 @@ pub struct CreateCheckin {
 impl Job<AppState> for CreateCheckin {
     const NAME: &'static str = "CreateCheckin";
 
-    async fn run(&self, app_state: AppState) -> miette::Result<()> {
+    async fn run(&self, app_state: AppState) -> color_eyre::Result<()> {
         let page = sqlx::query!(
             r#"
         SELECT Pages.path, Sites.domain
@@ -28,8 +27,7 @@ impl Job<AppState> for CreateCheckin {
             self.page_id
         )
         .fetch_one(app_state.db())
-        .await
-        .into_diagnostic()?;
+        .await?;
 
         let domain = page.domain;
         let path = page.path;
@@ -64,8 +62,7 @@ impl Job<AppState> for CreateCheckin {
             duration
         )
         .execute(app_state.db())
-        .await
-        .into_diagnostic()?;
+        .await?;
 
         Ok(())
     }
@@ -78,7 +75,7 @@ pub struct BulkEnqueueCheckins;
 impl Job<AppState> for BulkEnqueueCheckins {
     const NAME: &'static str = "BulkEnqueueCheckins";
 
-    async fn run(&self, app_state: AppState) -> miette::Result<()> {
+    async fn run(&self, app_state: AppState) -> color_eyre::Result<()> {
         let pages = sqlx::query!(
             r#"
         SELECT page_id
@@ -86,15 +83,14 @@ impl Job<AppState> for BulkEnqueueCheckins {
       "#
         )
         .fetch_all(app_state.db())
-        .await
-        .into_diagnostic()?;
+        .await?;
 
         for page in pages {
             let job = CreateCheckin {
                 page_id: page.page_id,
             };
 
-            job.enqueue(app_state.clone(), "Bulk Checkin Enqueue".to_string())
+            job.enqueue(app_state.clone(), "Bulk Checkin Enqueue".to_string(), None)
                 .await?;
         }
 

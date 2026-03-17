@@ -8,7 +8,7 @@ pub(crate) struct Hello;
 
 #[async_trait::async_trait]
 impl Job<AppState> for Hello {
-    async fn run(&self, _app_state: AppState) -> miette::Result<()> {
+    async fn run(&self, _app_state: AppState) -> color_eyre::Result<()> {
         tracing::info!("Hello, world!");
 
         Ok(())

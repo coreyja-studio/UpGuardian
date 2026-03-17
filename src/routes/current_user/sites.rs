@@ -8,10 +8,9 @@ use axum::{
 };
 
 use chrono::Duration;
-use cja::{
-    app_state::AppState as _,
-    server::session::{DBSession, SessionRedirect},
-};
+use cja::app_state::AppState as _;
+
+use crate::session::{DBSession, SessionRedirect};
 use maud::{html, Render};
 use serde::Deserialize as _;
 use sqlx::postgres::types::PgInterval;
@@ -229,7 +228,6 @@ struct SiteParams {
     site_id: Uuid,
 }
 
-#[async_trait::async_trait]
 impl FromRequestParts<AppState> for Site {
     type Rejection = SessionRedirect;
 

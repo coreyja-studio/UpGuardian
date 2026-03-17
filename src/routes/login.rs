@@ -2,11 +2,14 @@ use axum::{
     extract::{Query, State},
     response::{IntoResponse, Redirect},
 };
-use cja::{app_state::AppState as _, server::session::DBSession};
+use cja::app_state::AppState as _;
+
+use crate::session::DBSession;
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
 use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use cja::server::cookies::CookieKey;
 use tower_cookies::Cookie;
 
 use crate::app_state::AppState;
@@ -90,8 +93,8 @@ pub async fn logout(
     cookies: tower_cookies::Cookies,
     State(app_state): State<AppState>,
 ) -> impl IntoResponse {
-    let private = cookies.private(app_state.cookie_key());
-    private.remove(Cookie::new("session_id", ""));
+    let private = cookies.private(&app_state.cookie_key().0);
+    private.remove(Cookie::from("session_id"));
 
     Redirect::to("/").into_response()
 }
