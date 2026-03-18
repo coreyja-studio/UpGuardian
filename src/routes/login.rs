@@ -5,7 +5,6 @@ use axum::{
 use cja::app_state::AppState as _;
 
 use crate::session::DBSession;
-use cja::server::cookies::CookieKey;
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
 use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};

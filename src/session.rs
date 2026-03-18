@@ -13,6 +13,7 @@ use crate::app_state::AppState;
 /// Database-backed session with user association.
 /// Replaces the old cja::server::session::DBSession that no longer exists.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct DBSession {
     pub session_id: Uuid,
     pub user_id: Uuid,

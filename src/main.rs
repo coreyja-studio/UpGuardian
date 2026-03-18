@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, time::Duration};
 
-use cja::{app_state::AppState as _, jobs::worker::job_worker};
+use cja::jobs::worker::job_worker;
 use miette::{Context, IntoDiagnostic, Result};
 use setup::setup_sentry;
 use tokio::{net::TcpListener, task::JoinError};

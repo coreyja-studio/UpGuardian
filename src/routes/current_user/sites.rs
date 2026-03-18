@@ -215,6 +215,7 @@ pub async fn create(
     Redirect::to(&format!("/my/sites/{new_site_id}"))
 }
 
+#[allow(dead_code)]
 pub struct Site {
     pub site_id: Uuid,
     pub user_id: Uuid,
@@ -399,6 +400,7 @@ impl Emotion {
 }
 
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
 pub enum IconStyle {
     Solid,
     Regular,
@@ -530,7 +532,7 @@ async fn site_stats_overview(
 
 pub fn calculate_percentile_change(
     old_checkins: Vec<Checkin>,
-    new_checkins: &Vec<Checkin>,
+    new_checkins: &[Checkin],
     succesful_percent: f64,
 ) -> Option<Change> {
     let successful_percent_change = if old_checkins.is_empty() || new_checkins.is_empty() {
@@ -560,7 +562,7 @@ pub fn calculate_percentile_change(
 }
 
 pub fn calculate_response_time_change(
-    old_checkins: &Vec<Checkin>,
+    old_checkins: &[Checkin],
     avg_response_time: f64,
 ) -> Option<Change> {
     let response_time_change = if old_checkins.is_empty() {

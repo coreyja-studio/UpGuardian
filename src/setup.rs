@@ -1,4 +1,4 @@
-use miette::{miette, IntoDiagnostic, Result};
+use miette::{IntoDiagnostic, Result};
 use sentry::ClientInitGuard;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
