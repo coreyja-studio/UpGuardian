@@ -5,11 +5,11 @@ use axum::{
 use cja::app_state::AppState as _;
 
 use crate::session::DBSession;
+use cja::server::cookies::CookieKey;
 use jsonwebtoken::{Algorithm, EncodingKey, Header};
 use miette::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use cja::server::cookies::CookieKey;
 use tower_cookies::Cookie;
 
 use crate::app_state::AppState;

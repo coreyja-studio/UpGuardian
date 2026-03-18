@@ -89,9 +89,7 @@ async fn _main() -> Result<()> {
         tokio::spawn({
             let app_state = app_state.clone();
             let token = shutdown_token.clone();
-            async move {
-                cron::run_cron(app_state, token).await
-            }
+            async move { cron::run_cron(app_state, token).await }
         }),
     ];
     info!("Tasks Spawned");
