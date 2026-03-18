@@ -102,6 +102,8 @@ jobs:
 
       - name: Build application
         run: cargo build --features e2e-testing
+        env:
+          SQLX_OFFLINE: "true"
 
       - name: Install Playwright dependencies
         working-directory: e2e
