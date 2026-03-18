@@ -8,12 +8,11 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_BUILD_JOBS: 1
 
 jobs:
   fmt:
     name: Check Formatting
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -28,7 +27,7 @@ jobs:
 
   clippy:
     name: Clippy
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -48,7 +47,7 @@ jobs:
 
   e2e:
     name: E2E Tests
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16
@@ -142,7 +141,7 @@ jobs:
   ready:
     if: always()
     needs: [fmt, clippy, e2e]
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
