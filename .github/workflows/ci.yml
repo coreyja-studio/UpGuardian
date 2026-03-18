@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_BUILD_JOBS: 1
+
+jobs:
+  fmt:
+    name: Check Formatting
+    runs-on: [self-hosted, small]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: [self-hosted, large]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        env:
+          SQLX_OFFLINE: "true"
+
+  e2e:
+    name: E2E Tests
+    runs-on: [self-hosted, large]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+      FONT_AWESOME_KIT_ID: "dummy-for-ci"
+      CI: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache-shared-key: "e2e"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Build application
+        run: cargo build --features e2e-testing
+
+      - name: Install Playwright dependencies
+        working-directory: e2e
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Start application
+        run: |
+          ./target/debug/up_guardian &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+
+          # Wait for the app to be ready
+          for i in {1..30}; do
+            if curl -sf http://localhost:3001/ > /dev/null 2>&1; then
+              echo "App is ready!"
+              break
+            fi
+            if ! kill -0 $APP_PID 2>/dev/null; then
+              echo "App process died!"
+              exit 1
+            fi
+            echo "Waiting for app... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run E2E tests
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -n "$APP_PID" ]; then
+            kill $APP_PID 2>/dev/null || true
+          fi
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 30
+
+  ready:
+    if: always()
+    needs: [fmt, clippy, e2e]
+    runs-on: [self-hosted, small]
+    steps:
+      - name: Check results
+        run: |
+          results="${{ join(needs.*.result, ' ') }}"
+          for result in $results; do
+            if [[ "$result" != "success" && "$result" != "skipped" ]]; then
+              echo "Job result: $result (expected success or skipped)"
+              exit 1
+            fi
+          done
