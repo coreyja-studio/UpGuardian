@@ -1,10 +1,9 @@
-use miette::{miette, IntoDiagnostic, Result};
+use miette::{IntoDiagnostic, Result};
 use sentry::ClientInitGuard;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 pub fn setup_tracing() -> Result<()> {
-    cja::setup::setup_tracing("up_guardian")
-        .map_err(|e| miette::miette!("{e:#}"))?;
+    cja::setup::setup_tracing("up_guardian").map_err(|e| miette::miette!("{e:#}"))?;
     Ok(())
 }
 

@@ -16,7 +16,10 @@ fn cron_registry() -> CronRegistry<AppState> {
     registry
 }
 
-pub(crate) async fn run_cron(app_state: AppState, shutdown_token: CancellationToken) -> miette::Result<()> {
+pub(crate) async fn run_cron(
+    app_state: AppState,
+    shutdown_token: CancellationToken,
+) -> miette::Result<()> {
     Worker::new(app_state, cron_registry())
         .run(shutdown_token)
         .await

@@ -1,6 +1,6 @@
 use std::{net::SocketAddr, time::Duration};
 
-use cja::{app_state::AppState as _, jobs::worker::job_worker};
+use cja::jobs::worker::job_worker;
 use miette::{Context, IntoDiagnostic, Result};
 use setup::setup_sentry;
 use tokio::{net::TcpListener, task::JoinError};
@@ -89,9 +89,7 @@ async fn _main() -> Result<()> {
         tokio::spawn({
             let app_state = app_state.clone();
             let token = shutdown_token.clone();
-            async move {
-                cron::run_cron(app_state, token).await
-            }
+            async move { cron::run_cron(app_state, token).await }
         }),
     ];
     info!("Tasks Spawned");

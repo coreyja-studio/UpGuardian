@@ -47,3 +47,6 @@ include_dir = { version = "0.7.3", features = ["metadata", "glob"] }
 humantime = "2.1.0"
 tokio-util = "0.7"
 tower-http = { version = "0.6", features = ["trace"] }
+
+[features]
+e2e-testing = []

@@ -12,6 +12,8 @@ use crate::app_state::AppState;
 mod current_user;
 mod home;
 mod login;
+#[cfg(feature = "e2e-testing")]
+mod test_login;
 
 const STATIC_ASSETS: Dir<'_> = include_dir::include_dir!("$CARGO_MANIFEST_DIR/public");
 
@@ -41,7 +43,7 @@ async fn static_assets(Path(p): Path<String>) -> Response {
 }
 
 pub fn routes() -> Router<AppState> {
-    Router::new()
+    let router = Router::new()
         .route("/", get(home::show))
         .route("/public/{*path}", get(static_assets))
         .route("/styles/tailwind.css", get(tailwind_css))
@@ -54,7 +56,10 @@ pub fn routes() -> Router<AppState> {
         )
         .route("/my/sites/new", get(current_user::sites::new))
         .route("/my/sites/{site_id}", get(current_user::sites::show))
-        .route("/my/sites/{site_id}/refresh", get(current_user::sites::refresh))
+        .route(
+            "/my/sites/{site_id}/refresh",
+            get(current_user::sites::refresh),
+        )
         .route(
             "/my/sites/{site_id}/pages/new",
             get(current_user::pages::new),
@@ -70,7 +75,12 @@ pub fn routes() -> Router<AppState> {
         .route(
             "/my/sites/{site_id}/pages/{page_id}/refresh",
             get(current_user::pages::refresh),
-        )
+        );
+
+    #[cfg(feature = "e2e-testing")]
+    let router = router.merge(test_login::routes());
+
+    router
 }
 
 async fn tailwind_css() -> &'static str {

@@ -13,6 +13,7 @@ use crate::app_state::AppState;
 /// Database-backed session with user association.
 /// Replaces the old cja::server::session::DBSession that no longer exists.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct DBSession {
     pub session_id: Uuid,
     pub user_id: Uuid,
@@ -57,11 +58,10 @@ impl DBSession {
             updated_at: row.3,
         };
 
-        let cookie =
-            tower_cookies::Cookie::build(("session_id", session.session_id.to_string()))
-                .path("/")
-                .http_only(true)
-                .secure(true);
+        let cookie = tower_cookies::Cookie::build(("session_id", session.session_id.to_string()))
+            .path("/")
+            .http_only(true)
+            .secure(true);
 
         let private = cookies.private(&app_state.cookie_key().0);
         private.add(cookie.into());
@@ -69,10 +69,7 @@ impl DBSession {
         Ok(session)
     }
 
-    async fn from_parts(
-        parts: &mut Parts,
-        state: &AppState,
-    ) -> Result<Option<Self>, Infallible> {
+    async fn from_parts(parts: &mut Parts, state: &AppState) -> Result<Option<Self>, Infallible> {
         let cookies = match tower_cookies::Cookies::from_request_parts(parts, state).await {
             Ok(c) => c,
             Err(_) => return Ok(None),

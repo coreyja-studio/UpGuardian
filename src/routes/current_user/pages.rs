@@ -79,6 +79,7 @@ pub async fn create(
     Redirect::to(&format!("/my/sites/{}", site_id,))
 }
 
+#[allow(dead_code)]
 pub struct Page {
     pub page_id: Uuid,
     pub site_id: Uuid,
@@ -204,6 +205,7 @@ pub struct GraphQuery {
     hours: i32,
 }
 
+#[allow(dead_code)]
 pub trait FromHours {
     fn from_hours(hours: i32) -> Self;
 }
@@ -292,6 +294,7 @@ pub async fn refresh(
     .0
 }
 
+#[allow(dead_code)]
 struct CheckinTable(Vec<Checkin>);
 
 impl Render for CheckinTable {
@@ -325,6 +328,7 @@ pub struct Checkin {
     pub created_at: DateTime<Utc>,
 }
 
+#[allow(dead_code)]
 struct SimpleCheckinGraph {
     checkins: Vec<Checkin>,
     range: Option<std::ops::Range<DateTime<Utc>>>,
@@ -774,6 +778,7 @@ impl Render for SampledCheckinGraph {
         let chunk_size = (total_count / self.number_of_chunks).max(1);
         let chunks = self.checkins.chunks(chunk_size);
 
+        #[allow(clippy::type_complexity)]
         let min_avg_max: Vec<((f64, f64), GraphPoint, (f64, f64))> = chunks
             .map(|chunk| {
                 let min = chunk
