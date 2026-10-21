@@ -13,15 +13,6 @@ tokio = { version = "1.21", features = ["full"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
 tracing-tree = "0.2.2"
-sentry = { version = "0.31.5", default-features = false, features = [
-  "rustls",
-  "backtrace",
-  "contexts",
-  "panic",
-  "tower",
-  "reqwest",
-] }
-sentry-tower = { version = "0.31.5", features = ["http"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 maud = { version = "0.27.0", features = ["axum"] }
@@ -29,7 +20,7 @@ maud = { version = "0.27.0", features = ["axum"] }
 async-trait = "0.1.60"
 axum = { version = "0.8", features = ["macros"] }
 
-reqwest = { version = "0.11.22", features = [
+reqwest = { version = "0.12", features = [
   "json",
   "rustls-tls",
 ], default-features = false }

@@ -1,33 +1,9 @@
 use miette::{IntoDiagnostic, Result};
-use sentry::ClientInitGuard;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
 pub fn setup_tracing() -> Result<()> {
     cja::setup::setup_tracing("up_guardian").map_err(|e| miette::miette!("{e:#}"))?;
     Ok(())
-}
-
-pub fn setup_sentry() -> Option<ClientInitGuard> {
-    let git_commit: Option<std::borrow::Cow<_>> = option_env!("VERGEN_GIT_SHA").map(|x| x.into());
-    let release_name =
-        git_commit.unwrap_or_else(|| sentry::release_name!().unwrap_or_else(|| "dev".into()));
-
-    if let Ok(sentry_dsn) = std::env::var("SENTRY_DSN") {
-        println!("Sentry enabled");
-
-        Some(sentry::init((
-            sentry_dsn,
-            sentry::ClientOptions {
-                traces_sample_rate: 0.5,
-                release: Some(release_name),
-                ..Default::default()
-            },
-        )))
-    } else {
-        println!("Sentry not configured in this environment");
-
-        None
-    }
 }
 
 #[tracing::instrument(err)]
