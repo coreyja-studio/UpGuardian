@@ -1,8 +1,7 @@
 use std::{net::SocketAddr, time::Duration};
 
-use cja::jobs::worker::job_worker;
+use cja::jobs::{worker::job_worker, JobWorkerConfig};
 use miette::{Context, IntoDiagnostic, Result};
-use setup::setup_sentry;
 use tokio::{net::TcpListener, task::JoinError};
 use tokio_util::sync::CancellationToken;
 use tower_cookies::CookieManagerLayer;
@@ -25,8 +24,6 @@ mod server_tracing;
 use app_state::AppState;
 
 fn main() -> Result<()> {
-    let _sentry_guard = setup_sentry();
-
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)
         .enable_all()
@@ -80,7 +77,7 @@ async fn _main() -> Result<()> {
                     Duration::from_secs(5),
                     20,
                     token,
-                    Duration::from_secs(7200),
+                    JobWorkerConfig::default(),
                 )
                 .await
                 .map_err(|e| miette::miette!("{e:#}"))
