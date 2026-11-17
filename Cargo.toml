@@ -27,7 +27,7 @@ reqwest = { version = "0.12", features = [
 jsonwebtoken = "9.1.0"
 chrono = "0.4.31"
 
-cja = { version = "0.0.0", git = "https://github.com/coreyja/cja", branch = "main" }
+cja = { version = "0.0.0", git = "https://github.com/coreyja/cja", rev = "319274e874cbaed79054012453e3922535ff445e" }
 color-eyre = "0.6"
 futures = "0.3.30"
 sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "migrate", "macros", "uuid"] }
